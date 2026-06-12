@@ -2,6 +2,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useNovelStore } from '@/stores/novel'
+import footbarRaw from '../../footbar.md?raw'
 
 const route = useRoute()
 const router = useRouter()
@@ -14,16 +15,33 @@ const existingNovel = computed(() => {
   return store.getNovelById(novelId.value)
 })
 
-// 小说基本信息
 const novelTitle = ref('')
 const novelAuthor = ref('')
 
-// 章节编辑
 const chapterTitle = ref('')
 const chapterContent = ref('')
 const editingChapterId = ref<string | null>(null)
 
 const chapters = computed(() => existingNovel.value?.chapters ?? [])
+
+// 简单 Markdown 解析 → HTML 行数组
+const footbarLines = computed(() => {
+  return footbarRaw
+    .split('\n')
+    .filter((line) => line.trim())
+    .map((line) => {
+      if (line.startsWith('# ')) {
+        return { type: 'h1', text: line.slice(2) }
+      }
+      if (line.startsWith('- ')) {
+        return { type: 'li', text: line.slice(2) }
+      }
+      if (line.startsWith('> ')) {
+        return { type: 'quote', text: line.slice(2) }
+      }
+      return { type: 'p', text: line }
+    })
+})
 
 onMounted(() => {
   if (existingNovel.value) {
@@ -32,7 +50,6 @@ onMounted(() => {
   }
 })
 
-// --- 小说操作 ---
 function saveNovelMeta() {
   if (!novelTitle.value.trim()) {
     alert('请输入作品名称')
@@ -54,7 +71,6 @@ function saveNovelMeta() {
   alert('作品信息已保存')
 }
 
-// --- 章节操作 ---
 function startAddChapter() {
   editingChapterId.value = null
   chapterTitle.value = ''
@@ -106,211 +122,249 @@ function goBack() {
 </script>
 
 <template>
-  <div class="editor">
-    <button class="btn-back" @click="goBack">← 返回首页</button>
+  <div class="vp-content">
+    <button class="vp-back-link" @click="goBack">← 返回书架</button>
 
     <h1>{{ isEditing ? '编辑作品' : '新建作品' }}</h1>
 
     <!-- 作品基本信息 -->
-    <section class="section novel-meta">
+    <section class="vp-section">
       <h2>作品信息</h2>
-      <div class="form-group">
+      <div class="vp-form-group">
         <label>作品名称</label>
         <input
           v-model="novelTitle"
           type="text"
           placeholder="请输入作品名称"
-          class="input"
+          class="vp-input"
         />
       </div>
-      <div class="form-group">
+      <div class="vp-form-group">
         <label>作者</label>
         <input
           v-model="novelAuthor"
           type="text"
           placeholder="请输入作者名"
-          class="input"
+          class="vp-input"
         />
       </div>
-      <button class="btn-primary" @click="saveNovelMeta">保存作品信息</button>
+      <button class="vp-btn" @click="saveNovelMeta">保存作品信息</button>
     </section>
 
     <!-- 章节管理 -->
-    <section v-if="isEditing && novelId" class="section chapters-section">
+    <section v-if="isEditing && novelId" class="vp-section">
       <h2>章节管理</h2>
 
-      <!-- 已有章节列表 -->
-      <div v-if="chapters.length > 0" class="chapters-list">
+      <div v-if="chapters.length > 0" class="vp-chapter-list">
         <div
           v-for="(chapter, index) in chapters"
           :key="chapter.id"
-          class="chapter-row"
+          class="vp-chapter-row"
         >
           <span class="chapter-num">{{ index + 1 }}.</span>
           <span class="chapter-name">{{ chapter.title }}</span>
           <div class="chapter-actions">
-            <button class="btn-sm" @click="startEditChapter(chapter.id)">编辑</button>
-            <button class="btn-sm btn-danger" @click="deleteChapter(chapter.id)">删除</button>
+            <button class="vp-btn-sm" @click="startEditChapter(chapter.id)">编辑</button>
+            <button class="vp-btn-sm vp-btn-sm--danger" @click="deleteChapter(chapter.id)">删除</button>
           </div>
         </div>
       </div>
-      <div v-else class="empty-hint">
+      <div v-else class="vp-empty">
         <p>暂无章节，在下方添加</p>
       </div>
 
-      <!-- 编辑/新增章节 -->
-      <div class="chapter-editor">
+      <div class="vp-chapter-editor">
         <h3>{{ editingChapterId ? '编辑章节' : '新增章节' }}</h3>
-        <div class="form-group">
+        <div class="vp-form-group">
           <label>章节标题</label>
           <input
             v-model="chapterTitle"
             type="text"
             placeholder="请输入章节标题"
-            class="input"
+            class="vp-input"
           />
         </div>
-        <div class="form-group">
+        <div class="vp-form-group">
           <label>章节内容</label>
           <textarea
             v-model="chapterContent"
             placeholder="请输入章节内容……"
-            class="textarea"
+            class="vp-textarea"
             rows="12"
           ></textarea>
         </div>
-        <div class="editor-actions">
-          <button class="btn-primary" @click="saveChapter">
+        <div class="vp-form-actions">
+          <button class="vp-btn" @click="saveChapter">
             {{ editingChapterId ? '保存修改' : '添加章节' }}
           </button>
-          <button v-if="editingChapterId" class="btn-secondary" @click="cancelChapterEdit">
+          <button v-if="editingChapterId" class="vp-btn vp-btn--secondary" @click="cancelChapterEdit">
             取消编辑
           </button>
         </div>
       </div>
     </section>
 
-    <!-- 新建作品时先提醒保存 -->
-    <div v-else-if="!isEditing" class="empty-hint">
+    <div v-else-if="!isEditing" class="vp-empty">
       <p>💡 请先填写作品信息并保存，然后即可添加章节</p>
     </div>
+
+    <!-- ===== 底栏 ===== -->
+    <footer class="vp-footbar">
+      <div class="vp-footbar-inner">
+        <template v-for="(line, i) in footbarLines" :key="i">
+          <strong v-if="line.type === 'h1'" class="footbar-h1">{{ line.text }}</strong>
+          <span v-else-if="line.type === 'li'" class="footbar-li">{{ line.text }}</span>
+          <em v-else-if="line.type === 'quote'" class="footbar-quote">{{ line.text }}</em>
+          <span v-else class="footbar-p">{{ line.text }}</span>
+        </template>
+      </div>
+    </footer>
   </div>
 </template>
 
 <style scoped>
-.editor {
+.vp-content {
   max-width: 720px;
   margin: 0 auto;
+  padding-bottom: 80px;
 }
 
-.btn-back {
+.vp-back-link {
+  display: inline-block;
   background: none;
   border: none;
-  color: #4a90d9;
-  cursor: pointer;
+  color: var(--vp-c-brand);
   font-size: 14px;
   padding: 0;
+  margin-bottom: 20px;
+  font-weight: 500;
+}
+
+.vp-back-link:hover {
+  color: var(--vp-c-brand-dark);
+  text-decoration: underline;
+}
+
+.vp-content > h1 {
+  font-size: 2rem;
+  margin: 0 0 28px;
+}
+
+/* Section 卡片 */
+.vp-section {
+  margin-bottom: 32px;
+  padding: 24px;
+  background: var(--vp-c-bg);
+  border: 1px solid var(--vp-c-border);
+  border-radius: var(--vp-radius);
+}
+
+.vp-section h2 {
+  font-size: 1.1rem;
+  margin: 0 0 18px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--vp-c-border);
+}
+
+/* 表单通用 */
+.vp-form-group {
   margin-bottom: 16px;
 }
 
-h1 {
-  font-size: 24px;
-  margin: 0 0 24px;
-}
-
-.section {
-  margin-bottom: 32px;
-  padding: 20px;
-  background: #fafbfc;
-  border-radius: 8px;
-  border: 1px solid #eee;
-}
-
-.section h2 {
-  font-size: 16px;
-  margin: 0 0 16px;
-}
-
-.form-group {
-  margin-bottom: 14px;
-}
-
-.form-group label {
+.vp-form-group label {
   display: block;
   font-size: 13px;
-  color: #666;
-  margin-bottom: 4px;
+  font-weight: 500;
+  color: var(--vp-c-text-light);
+  margin-bottom: 6px;
 }
 
-.input,
-.textarea {
+.vp-input,
+.vp-textarea {
   width: 100%;
-  padding: 8px 12px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  font-size: 14px;
+  padding: 10px 14px;
+  border: 1px solid var(--vp-c-border);
+  border-radius: var(--vp-radius);
+  font-size: 15px;
   font-family: inherit;
-  box-sizing: border-box;
-}
-
-.input:focus,
-.textarea:focus {
+  color: var(--vp-c-text);
+  background: var(--vp-c-bg);
+  transition: border-color 0.2s, box-shadow 0.2s;
   outline: none;
-  border-color: #4a90d9;
-  box-shadow: 0 0 0 2px rgba(74, 144, 217, 0.15);
+  resize: vertical;
 }
 
-.textarea {
-  resize: vertical;
+.vp-input:focus,
+.vp-textarea:focus {
+  border-color: var(--vp-c-brand);
+  box-shadow: 0 0 0 3px rgba(62, 175, 124, 0.15);
+}
+
+.vp-textarea {
   line-height: 1.8;
 }
 
-.btn-primary {
-  background: #4a90d9;
+/* 按钮 */
+.vp-btn {
+  background: var(--vp-c-brand);
   color: #fff;
   border: none;
-  padding: 8px 20px;
-  border-radius: 6px;
+  padding: 10px 24px;
+  border-radius: 20px;
   font-size: 14px;
+  font-weight: 600;
   cursor: pointer;
+  transition: background 0.2s, transform 0.15s;
 }
 
-.btn-primary:hover {
-  background: #3a7bc8;
+.vp-btn:hover {
+  background: var(--vp-c-brand-dark);
+  transform: translateY(-1px);
 }
 
-.btn-secondary {
-  background: #e8ecf1;
-  color: #333;
-  border: none;
-  padding: 8px 20px;
-  border-radius: 6px;
-  font-size: 14px;
-  cursor: pointer;
+.vp-btn:active {
+  transform: translateY(0);
+}
+
+.vp-btn--secondary {
+  background: var(--vp-c-bg-mute);
+  color: var(--vp-c-text);
   margin-left: 8px;
 }
 
-.btn-secondary:hover {
-  background: #d8dce3;
+.vp-btn--secondary:hover {
+  background: var(--vp-c-border);
 }
 
-.chapter-row {
+.vp-form-actions {
+  margin-top: 12px;
+}
+
+/* 章节列表 */
+.vp-chapter-row {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 0;
-  border-bottom: 1px solid #eee;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--vp-c-border);
+  transition: background 0.15s;
+}
+
+.vp-chapter-row:hover {
+  background: var(--vp-c-bg-mute);
 }
 
 .chapter-num {
-  color: #999;
+  color: var(--vp-c-text-lighter);
   min-width: 28px;
+  font-size: 14px;
 }
 
 .chapter-name {
   flex: 1;
-  color: #333;
+  color: var(--vp-c-text);
   font-size: 14px;
+  font-weight: 500;
 }
 
 .chapter-actions {
@@ -318,48 +372,92 @@ h1 {
   gap: 6px;
 }
 
-.btn-sm {
-  background: #f0f0f0;
-  border: 1px solid #ddd;
-  padding: 4px 10px;
-  border-radius: 4px;
+.vp-btn-sm {
+  background: var(--vp-c-bg-mute);
+  border: 1px solid var(--vp-c-border);
+  padding: 4px 12px;
+  border-radius: var(--vp-radius-sm);
   font-size: 12px;
   cursor: pointer;
-  color: #555;
+  color: var(--vp-c-text-light);
+  font-weight: 500;
+  transition: all 0.15s;
 }
 
-.btn-sm:hover {
-  background: #e0e0e0;
+.vp-btn-sm:hover {
+  border-color: var(--vp-c-brand-lighter);
+  color: var(--vp-c-brand);
 }
 
-.btn-danger {
-  color: #d94a4a;
-  border-color: #f5c6c6;
+.vp-btn-sm--danger:hover {
+  border-color: #e74c3c;
+  color: #e74c3c;
+  background: #fef0ef;
 }
 
-.btn-danger:hover {
-  background: #fce8e8;
+/* 章节编辑器 */
+.vp-chapter-editor {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--vp-c-border);
 }
 
-.chapter-editor {
-  margin-top: 20px;
-  padding-top: 16px;
-  border-top: 1px solid #eee;
+.vp-chapter-editor h3 {
+  font-size: 1rem;
+  margin: 0 0 14px;
 }
 
-.chapter-editor h3 {
-  font-size: 15px;
-  margin: 0 0 12px;
-}
-
-.editor-actions {
-  margin-top: 8px;
-}
-
-.empty-hint {
+.vp-empty {
   text-align: center;
   padding: 40px 0;
-  color: #999;
+  color: var(--vp-c-text-lighter);
   font-size: 14px;
+}
+
+/* ===== 底栏 ===== */
+.vp-footbar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--vp-c-bg);
+  border-top: 1px solid var(--vp-c-border);
+  z-index: 95;
+  padding: 10px 0;
+  transition: var(--vp-transition);
+}
+
+.vp-footbar-inner {
+  max-width: var(--vp-content-max-width);
+  margin: 0 auto;
+  padding: 0 24px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 16px;
+  font-size: 13px;
+  color: var(--vp-c-text-lighter);
+}
+
+.footbar-h1 {
+  color: var(--vp-c-text);
+  font-size: 13px;
+  width: 100%;
+  margin-bottom: 2px;
+}
+
+.footbar-li {
+  display: inline-block;
+  color: var(--vp-c-text-light);
+}
+
+.footbar-quote {
+  color: var(--vp-c-brand);
+  font-style: italic;
+  font-weight: 500;
+}
+
+.footbar-p {
+  color: var(--vp-c-text-lighter);
 }
 </style>

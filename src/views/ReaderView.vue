@@ -20,24 +20,24 @@ function goBack() {
 </script>
 
 <template>
-  <div v-if="novel" class="reader">
-    <button class="btn-back" @click="goBack">← 返回作品列表</button>
+  <div v-if="novel" class="vp-content">
+    <button class="vp-back-link" @click="goBack">← 返回书架</button>
 
-    <div class="novel-info">
+    <div class="vp-doc-header">
       <h1>{{ novel.title }}</h1>
-      <p class="author">作者：{{ novel.author }}</p>
-      <p class="meta">共 {{ novel.chapters.length }} 章 · 最后更新：{{ new Date(novel.updatedAt).toLocaleDateString('zh-CN') }}</p>
+      <p class="vp-doc-author">作者：{{ novel.author }}</p>
+      <p class="vp-doc-meta">共 {{ novel.chapters.length }} 章 · 最后更新：{{ new Date(novel.updatedAt).toLocaleDateString('zh-CN') }}</p>
     </div>
 
-    <div class="chapter-list">
+    <div class="vp-section">
       <h2>📖 目录</h2>
-      <div v-if="novel.chapters.length === 0" class="empty-chapters">
+      <div v-if="novel.chapters.length === 0" class="vp-empty">
         <p>暂无章节</p>
       </div>
       <div
         v-for="(chapter, index) in novel.chapters"
         :key="chapter.id"
-        class="chapter-item"
+        class="vp-chapter-item"
         @click="openChapter(chapter.id)"
       >
         <span class="chapter-index">{{ index + 1 }}.</span>
@@ -46,87 +46,97 @@ function goBack() {
     </div>
   </div>
 
-  <div v-else class="not-found">
+  <div v-else class="vp-empty">
     <p>作品不存在或已被删除</p>
-    <button class="btn-back" @click="goBack">← 返回首页</button>
+    <button class="vp-back-link" @click="goBack">← 返回首页</button>
   </div>
 </template>
 
 <style scoped>
-.reader {
-  max-width: 700px;
+.vp-content {
+  max-width: 720px;
   margin: 0 auto;
 }
 
-.btn-back {
+.vp-back-link {
+  display: inline-block;
   background: none;
   border: none;
-  color: #4a90d9;
-  cursor: pointer;
+  color: var(--vp-c-brand);
   font-size: 14px;
   padding: 0;
-  margin-bottom: 16px;
+  margin-bottom: 24px;
+  font-weight: 500;
 }
 
-.novel-info {
-  margin-bottom: 32px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid #eee;
+.vp-back-link:hover {
+  color: var(--vp-c-brand-dark);
+  text-decoration: underline;
 }
 
-.novel-info h1 {
-  font-size: 28px;
+.vp-doc-header {
+  margin-bottom: 36px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--vp-c-border);
+}
+
+.vp-doc-header h1 {
+  font-size: 2rem;
   margin: 0 0 8px;
 }
 
-.author {
-  color: #666;
+.vp-doc-author {
+  color: var(--vp-c-text-light);
   margin: 0 0 4px;
 }
 
-.meta {
-  color: #999;
+.vp-doc-meta {
+  color: var(--vp-c-text-lighter);
   font-size: 13px;
   margin: 0;
 }
 
-.chapter-list h2 {
-  font-size: 18px;
-  margin: 0 0 12px;
+.vp-section h2 {
+  font-size: 1.3rem;
+  margin: 0 0 16px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--vp-c-border);
 }
 
-.chapter-item {
+.vp-chapter-item {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 12px;
-  border-bottom: 1px solid #f0f0f0;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--vp-c-border);
   cursor: pointer;
-  transition: background 0.2s;
+  transition: background 0.2s, color 0.2s;
+  border-radius: var(--vp-radius-sm);
 }
 
-.chapter-item:hover {
-  background: #f7f9fc;
+.vp-chapter-item:hover {
+  background: var(--vp-c-bg-mute);
+  color: var(--vp-c-brand);
 }
 
 .chapter-index {
-  color: #999;
+  color: var(--vp-c-text-lighter);
   min-width: 30px;
+  font-size: 14px;
 }
 
 .chapter-title {
-  color: #333;
+  color: var(--vp-c-text);
+  font-size: 15px;
 }
 
-.empty-chapters {
-  text-align: center;
-  padding: 40px 0;
-  color: #999;
+.vp-chapter-item:hover .chapter-title {
+  color: var(--vp-c-brand);
 }
 
-.not-found {
+.vp-empty {
   text-align: center;
   padding: 80px 0;
-  color: #999;
+  color: var(--vp-c-text-lighter);
 }
 </style>

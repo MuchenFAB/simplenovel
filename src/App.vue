@@ -1,6 +1,10 @@
 <script setup lang="ts">
 import { RouterView } from 'vue-router'
 import AppHeader from '@/components/AppHeader.vue'
+import { useThemeStore } from '@/stores/theme'
+
+// 初始化主题（store 内部会自动设置 data-theme 属性）
+useThemeStore()
 </script>
 
 <template>
@@ -17,6 +21,7 @@ import AppHeader from '@/components/AppHeader.vue'
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  transition: background 0.3s ease;
 }
 
 .vp-page {

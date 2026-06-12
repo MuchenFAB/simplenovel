@@ -16,7 +16,6 @@ function goToEditor() {
     <div class="home-hero">
       <h1>📚 书架</h1>
       <p class="hero-subtitle">您的创作，随时翻阅，随心阅读</p>
-      <button class="vp-btn-primary" @click="goToEditor">✍️ 开始创作</button>
     </div>
 
     <div v-if="store.novels.length === 0" class="vp-empty">
