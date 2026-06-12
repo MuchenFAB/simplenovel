@@ -31,7 +31,7 @@ SimpleNovel 是一款基于 **Vue 3.0** 构建的 **开源简易小说连载平�
 
 ```bash
 # 克隆仓库
-git clone https://github.com/your-username/simplenovel.git
+git clone https://github.com/MuchenFAB/simplenovel.git
 cd simplenovel
 
 # 安装依赖
@@ -81,7 +81,34 @@ server {
 
 ---
 
-### 📁 项目结构
+### 数据存储
+
+SimpleNovel 默认使用 **localStorage** 存储数据, 无需额外配置, 开箱即用.
+
+如需将数据迁移到 MongoDB, 可启用内置的 MongoDB 接口:
+
+1. 在 `src/config/index.ts` 中修改配置:
+
+```ts
+useMongoDB: true,                      // 启用 MongoDB 存储
+mongoBaseUrl: 'http://localhost:3001', // MongoDB REST API 地址
+mongoDbName: 'simplenovel',           // 数据库名称
+```
+
+2. 后端需提供以下 REST API:
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| GET | `/api/{dbName}/novels` | 获取所有小说 |
+| PUT | `/api/{dbName}/novels` | 保存所有小说 |
+
+3. 重新构建部署即可切换
+
+> `src/api/novelApi.ts` 提供了 `createLocalApi()` 和 `createMongoApi()` 两种实现, 通过 `src/main.ts` 中的 config 开关自动选择.
+
+---
+
+###  📁 项目结构
 
 ```
 simplenovel/

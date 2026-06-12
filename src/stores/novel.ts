@@ -1,25 +1,36 @@
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
+import { ref, computed, inject } from 'vue'
 import { nextNovelId, nextChapterId } from '@/utils/shortid'
-import { saveNovels, loadNovels } from '@/utils/storage'
 import { maybeMigrateIds } from '@/utils/migrateIds'
 import { initCountersFromData } from '@/utils/counter'
+import type { NovelApi } from '@/api/novelApi'
 import type { Novel, Chapter } from '@/types'
 
-export const useNovelStore = defineStore('novel', () => {
-  const novels = ref<Novel[]>(loadNovels())
+function delay(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
 
-  // 首次加载时迁移旧 ID 并初始化计数器
-  if (novels.value.length > 0) {
-    const hadOld = maybeMigrateIds(novels.value)
-    if (hadOld) {
-      saveNovels(novels.value)
+export const useNovelStore = defineStore('novel', () => {
+  const api = inject<NovelApi>('novelApi')!
+  const novels = ref<Novel[]>([])
+  const loading = ref(true)
+
+  // 启动时从 API 加载
+  ;(async () => {
+    novels.value = await api.getAllNovels()
+    if (novels.value.length > 0) {
+      const hadOld = maybeMigrateIds(novels.value)
+      if (hadOld) {
+        await api.saveNovels(novels.value)
+        await delay(100) // 等待存储完成
+      }
+      initCountersFromData(
+        novels.value.length,
+        novels.value.map((n) => n.chapters.length),
+      )
     }
-    initCountersFromData(
-      novels.value.length,
-      novels.value.map((n) => n.chapters.length)
-    )
-  }
+    loading.value = false
+  })()
 
   const novelCount = computed(() => novels.value.length)
 
@@ -82,7 +93,7 @@ export const useNovelStore = defineStore('novel', () => {
   function updateChapter(
     novelId: string,
     chapterId: string,
-    updates: Partial<Pick<Chapter, 'title' | 'content'>>
+    updates: Partial<Pick<Chapter, 'title' | 'content'>>,
   ): void {
     const chapter = getChapterById(novelId, chapterId)
     if (!chapter) return
@@ -101,11 +112,12 @@ export const useNovelStore = defineStore('novel', () => {
   }
 
   function persist(): void {
-    saveNovels(novels.value)
+    api.saveNovels(novels.value)
   }
 
   return {
     novels,
+    loading,
     novelCount,
     getNovelById,
     getChapterById,

@@ -31,6 +31,13 @@ export interface SiteConfig {
   /** Allow context menu (right-click) */
   allowContextMenu: boolean
 
+  /** Enable MongoDB storage backend */
+  useMongoDB: boolean
+  /** MongoDB REST API base URL (e.g. http://localhost:3001) */
+  mongoBaseUrl: string
+  /** MongoDB database name */
+  mongoDbName: string
+
   /** ICP license number */
   icpNumber: string
 }
@@ -50,6 +57,10 @@ const defaultConfig: SiteConfig = {
   enableAntiCrawl: true,
   allowCopy: false,
   allowContextMenu: false,
+
+  useMongoDB: false,
+  mongoBaseUrl: 'http://localhost:3001',
+  mongoDbName: 'simplenovel',
 
   icpNumber: '',
 }
