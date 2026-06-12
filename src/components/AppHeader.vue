@@ -50,6 +50,10 @@ function goEditor() {
   router.push('/editor')
 }
 
+function goSearch() {
+  router.push('/search')
+}
+
 function toggleTheme() {
   themeStore.cycle()
 }
@@ -60,7 +64,7 @@ function toggleTheme() {
     <div class="vp-navbar-inner">
       <div class="vp-nav-left">
         <button class="vp-site-name" @click="goHome">
-          📖 {{ siteName }}
+          {{ siteName }}
         </button>
       </div>
 
@@ -70,6 +74,7 @@ function toggleTheme() {
         </template>
         <template v-else>
           <button class="vp-nav-link" @click="goHome">书架</button>
+          <button class="vp-nav-link" @click="goSearch">搜索</button>
           <button class="vp-nav-link" @click="goEditor">创作</button>
         </template>
         <button
@@ -93,8 +98,14 @@ function toggleTheme() {
   height: var(--vp-nav-height);
   background: var(--vp-c-bg);
   border-bottom: 1px solid var(--vp-c-border);
-  padding: 0 24px;
+  padding: 0 16px;
   transition: var(--vp-transition);
+}
+
+@media (min-width: 768px) {
+  .vp-navbar {
+    padding: 0 24px;
+  }
 }
 
 .vp-navbar-inner {
@@ -114,12 +125,18 @@ function toggleTheme() {
 .vp-site-name {
   background: none;
   border: none;
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 700;
   color: var(--vp-c-text);
   padding: 0;
   letter-spacing: -0.3px;
   transition: color 0.2s;
+}
+
+@media (min-width: 768px) {
+  .vp-site-name {
+    font-size: 18px;
+  }
 }
 
 .vp-site-name:hover {
@@ -129,18 +146,31 @@ function toggleTheme() {
 .vp-nav-right {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 2px;
+}
+
+@media (min-width: 768px) {
+  .vp-nav-right {
+    gap: 4px;
+  }
 }
 
 .vp-nav-link {
   background: none;
   border: none;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
   color: var(--vp-c-text-light);
-  padding: 6px 14px;
+  padding: 6px 10px;
   border-radius: var(--vp-radius-sm);
   transition: color 0.2s, background 0.2s;
+}
+
+@media (min-width: 768px) {
+  .vp-nav-link {
+    font-size: 14px;
+    padding: 6px 14px;
+  }
 }
 
 .vp-nav-link:hover {

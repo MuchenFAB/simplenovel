@@ -17,6 +17,12 @@ function openChapter(chapterId: string) {
 function goBack() {
   router.push('/')
 }
+
+function exportPdf() {
+  if (novel.value) {
+    import('@/utils/exportPdf').then((m) => m.exportNovelPdf(novel.value!))
+  }
+}
 </script>
 
 <template>
@@ -27,6 +33,7 @@ function goBack() {
       <h1>{{ novel.title }}</h1>
       <p class="vp-doc-author">作者: {{ novel.author }}</p>
       <p class="vp-doc-meta">共 {{ novel.chapters.length }} 章 - 最后更新: {{ new Date(novel.updatedAt).toLocaleDateString('zh-CN') }}</p>
+      <button class="vp-export-btn" @click="exportPdf">📥 导出整本 PDF</button>
     </div>
 
     <div class="vp-section">
@@ -93,7 +100,27 @@ function goBack() {
 .vp-doc-meta {
   color: var(--vp-c-text-lighter);
   font-size: 13px;
-  margin: 0;
+  margin: 0 0 12px;
+}
+
+.vp-export-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--vp-c-bg-mute);
+  border: 1px solid var(--vp-c-border);
+  padding: 6px 16px;
+  border-radius: var(--vp-radius);
+  font-size: 13px;
+  cursor: pointer;
+  color: var(--vp-c-text-light);
+  transition: all 0.2s;
+}
+
+.vp-export-btn:hover {
+  border-color: var(--vp-c-brand);
+  color: var(--vp-c-brand);
+  background: var(--vp-c-bg);
 }
 
 .vp-section h2 {

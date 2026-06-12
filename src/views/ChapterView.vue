@@ -2,12 +2,14 @@
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useNovelStore } from '@/stores/novel'
+import { useFontSizeStore, FONT_FAMILIES } from '@/stores/fontSize'
 import { siteConfig } from '@/config'
 import ChapterSidebar from '@/components/ChapterSidebar.vue'
 
 const route = useRoute()
 const router = useRouter()
 const store = useNovelStore()
+const fontSizeStore = useFontSizeStore()
 
 const novelId = computed(() => route.params.novelId as string)
 const chapterId = computed(() => route.params.chapterId as string)
@@ -51,6 +53,19 @@ function toggleSidebar() {
 function onSidebarSelect(chapterId: string) {
   sidebarOpen.value = false
   goToChapter(chapterId)
+}
+
+function exportCurrentChapter() {
+  if (novel.value && chapter.value) {
+    import('@/utils/exportPdf').then((m) =>
+      m.exportChapterPdf(chapter.value!, novel.value!.title)
+    )
+  }
+}
+
+function onFontFamilyChange(e: Event) {
+  const target = e.target as HTMLSelectElement
+  fontSizeStore.setFamily(target.value)
 }
 
 // ====================
@@ -132,7 +147,6 @@ onUnmounted(() => {
 
 <template>
   <div v-if="novel && chapter" class="chapter-wrapper">
-    <!-- 章节侧栏（由 enableChapterSidebar 控制） -->
     <ChapterSidebar
       v-if="siteConfig.enableChapterSidebar"
       :chapters="novel.chapters"
@@ -152,7 +166,9 @@ onUnmounted(() => {
           @click="toggleSidebar"
           title="目录"
         >
-          📑
+          <span class="vp-hamburger">
+            <i></i><i></i><i></i>
+          </span>
         </button>
         <button class="vp-link" @click="goHome">首页</button>
         <span class="separator">/</span>
@@ -160,6 +176,26 @@ onUnmounted(() => {
         <span class="separator">/</span>
         <span class="current">{{ chapter.title }}</span>
       </nav>
+
+      <div class="vp-toolbar">
+        <button class="vp-export-btn" @click="exportCurrentChapter">导出本章PDF</button>
+        <div class="vp-font-controls">
+          <select
+            class="vp-font-family-select"
+            :value="fontSizeStore.family"
+            @change="onFontFamilyChange"
+          >
+            <option
+              v-for="f in FONT_FAMILIES"
+              :key="f.value"
+              :value="f.value"
+            >{{ f.label }}</option>
+          </select>
+          <button class="vp-font-btn" @click="fontSizeStore.decrease()" title="缩小" :disabled="fontSizeStore.size <= fontSizeStore.MIN_SIZE">A-</button>
+          <span class="vp-font-size">{{ fontSizeStore.size }}</span>
+          <button class="vp-font-btn" @click="fontSizeStore.increase()" title="放大" :disabled="fontSizeStore.size >= fontSizeStore.MAX_SIZE">A+</button>
+        </div>
+      </div>
 
       <!-- 章节正文 -->
       <article
@@ -224,22 +260,35 @@ onUnmounted(() => {
   gap: 6px;
   font-size: 13px;
   color: var(--vp-c-text-lighter);
-  margin-bottom: 28px;
-  padding-bottom: 14px;
-  border-bottom: 1px solid var(--vp-c-border);
+  margin-bottom: 12px;
+  flex-wrap: wrap;
 }
 
 .vp-sidebar-toggle {
   background: var(--vp-c-bg-mute);
   border: 1px solid var(--vp-c-border);
-  font-size: 14px;
-  padding: 4px 8px;
+  padding: 6px 8px;
   border-radius: var(--vp-radius-sm);
   cursor: pointer;
   color: var(--vp-c-text-light);
   line-height: 1;
   margin-right: 4px;
   transition: background 0.15s, border-color 0.15s;
+}
+
+/* 三条横线图标 */
+.vp-hamburger {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  width: 16px;
+}
+
+.vp-hamburger i {
+  display: block;
+  height: 2px;
+  background: currentColor;
+  border-radius: 1px;
 }
 
 .vp-sidebar-toggle:hover {
@@ -274,6 +323,8 @@ onUnmounted(() => {
 
 .current {
   color: var(--vp-c-text-light);
+  flex: 1;
+  min-width: 0;
 }
 
 .vp-doc h1 {
@@ -282,8 +333,91 @@ onUnmounted(() => {
   text-align: center;
 }
 
+.vp-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 28px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--vp-c-border);
+}
+
+.vp-export-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--vp-c-bg-mute);
+  border: 1px solid var(--vp-c-border);
+  padding: 5px 12px;
+  border-radius: var(--vp-radius);
+  font-size: 13px;
+  cursor: pointer;
+  color: var(--vp-c-text-light);
+  transition: all 0.25s ease;
+}
+
+.vp-export-btn:hover {
+  border-color: var(--vp-c-brand);
+  color: var(--vp-c-brand);
+  background: var(--vp-c-bg);
+}
+
+.vp-font-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.vp-font-family-select {
+  padding: 5px 8px;
+  border: 1px solid var(--vp-c-border);
+  border-radius: var(--vp-radius);
+  background: var(--vp-c-bg-mute);
+  color: var(--vp-c-text-light);
+  font-size: 13px;
+  font-family: inherit;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.25s ease;
+}
+
+.vp-font-family-select:focus {
+  border-color: var(--vp-c-brand);
+}
+
+.vp-font-btn {
+  background: var(--vp-c-bg-mute);
+  border: 1px solid var(--vp-c-border);
+  padding: 5px 8px;
+  border-radius: var(--vp-radius);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--vp-c-text-light);
+  transition: all 0.25s ease;
+}
+
+.vp-font-btn:hover:not(:disabled) {
+  border-color: var(--vp-c-brand);
+  color: var(--vp-c-brand);
+}
+
+.vp-font-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.vp-font-size {
+  font-size: 13px;
+  color: var(--vp-c-text);
+  min-width: 24px;
+  text-align: center;
+  font-weight: 600;
+}
+
 .vp-doc-content {
-  font-size: 16px;
+  font-size: v-bind('fontSizeStore.size + "px"');
+  font-family: v-bind('fontSizeStore.family');
   line-height: 2;
   color: var(--vp-c-text);
 }
@@ -295,14 +429,11 @@ onUnmounted(() => {
   -ms-user-select: none;
 
   -webkit-user-drag: none;
-  user-drag: none;
-
   -webkit-touch-callout: none;
   -webkit-tap-highlight-color: transparent;
 }
 
 .vp-doc-content p {
-  text-indent: 2em;
   margin: 0 0 12px;
 }
 

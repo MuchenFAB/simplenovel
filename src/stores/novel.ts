@@ -25,7 +25,6 @@ export const useNovelStore = defineStore('novel', () => {
         await delay(100) // 等待存储完成
       }
       initCountersFromData(
-        novels.value.length,
         novels.value.map((n) => n.chapters.length),
       )
     }
@@ -50,7 +49,7 @@ export const useNovelStore = defineStore('novel', () => {
 
   function createNovel(title: string, author = '未知作者'): Novel {
     const novel: Novel = {
-      id: nextNovelId(),
+      id: nextNovelId(novels.value.map((n) => n.id)),
       title,
       author,
       chapters: [],
