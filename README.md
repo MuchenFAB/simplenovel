@@ -85,10 +85,10 @@ server {
 
 #### 方案三: GitHub Pages
 
-仓库已包含 `.github/workflows/deploy.yml`，推送 `main` 分支后自动构建并部署到 GitHub Pages。
+仓库已包含 `action/.github/workflows/main.yml`，推送 `action` 分支后自动构建并部署到 GitHub Pages。
 
-1. 在仓库 **Settings → Pages** 中将 Source 设为 **GitHub Actions**
-2. 推送代码 → 自动构建 → 部署到 `https://<username>.github.io/simplenovel/`
+1. 在仓库 **Settings → Pages** 中将 Source 设为 **Branch** 根目录选择"/" 配置自定义域名
+2. 推送代码 → 自动构建 → 部署到 `https://exp.example.exp/`
 
 ---
 
