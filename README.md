@@ -13,6 +13,8 @@ SimpleNovel 是一款基于 **Vue 3.0** 构建的 **开源简易小说连载平�
 - **阅读文字** - 沉浸式小说在线阅读体验
 - **上传文字** - 自由上传小说内容, 支持分章节管理
 - **分章节管理** - 清晰的作品章节目录, 阅读与创作互不干扰
+- **RSS 导入** - 粘贴 RSS 订阅地址一键导入文章，自动提取作者、标题、内容
+- **每日自动同步** - 对已导入的 RSS 源每日自动拉取新章节
 
 ---
 
@@ -22,9 +24,9 @@ SimpleNovel 是一款基于 **Vue 3.0** 构建的 **开源简易小说连载平�
 | ------------ | ------------------- |
 | **前端框架** | Vue 3.0             |
 | **构建工具** | Vite                |
-| **后端框架** | Node.js 24  |
+| **后端框架** | Node.js 24       |
 | **后端打包** | npm                 |
-| **数据库(可选)**|MongoDB|
+| **数据库 (可选)** | MongoDB         |
 
 ---
 
@@ -80,6 +82,13 @@ server {
 - **Vercel**: 导入 Git 仓库 -> 框架选 Vite -> 构建命令 `npm run build` -> 输出目录 `dist`
 - **Netlify**: 导入项目 -> Build command `npm run build` -> Publish directory `dist`
 
+#### 方案三: GitHub Pages
+
+仓库已包含 `.github/workflows/deploy.yml`，推送 `main` 分支后自动构建并部署到 GitHub Pages。
+
+1. 在仓库 **Settings → Pages** 中将 Source 设为 **GitHub Actions**
+2. 推送代码 → 自动构建 → 部署到 `https://<username>.github.io/simplenovel/`
+
 ---
 
 ### 数据存储
@@ -113,6 +122,8 @@ mongoDbName: 'simplenovel',           // 数据库名称
 
 ```
 simplenovel/
+├── .github/
+│   └── workflows/      # CI/CD 自动部署
 ├── src/
 │   ├── config/         # 配置中心
 │   ├── components/     # 通用组件
@@ -120,7 +131,7 @@ simplenovel/
 │   ├── stores/         # 状态管理
 │   ├── router/         # 路由配置
 │   ├── types/          # 类型定义
-│   ├── utils/          # 工具函数
+│   ├── utils/          # 工具函数 (含 RSS 解析)
 │   └── styles/         # 全局样式
 ├── public/             # 静态资源
 ├── footbar.md          # 底部备案栏内容
@@ -129,6 +140,29 @@ simplenovel/
 ├── tsconfig.json       # TypeScript 配置
 └── README.md           # 本文件
 ```
+
+---
+
+### 📡 RSS 导入与同步
+
+SimpleNovel 支持从 RSS 订阅源导入文章，将整条 feed 作为一部作品，每个 `<item>` 作为一个独立章节。
+
+#### 导入方式
+
+1. 点击导航栏 **「导入」** 进入 RSS 导入页面
+2. 粘贴 RSS 订阅地址（如 `https://example.com/feed.xml`）
+3. 点击「获取预览」查看 feed 标题、作者及前 10 篇文章
+4. 确认导入后自动创建作品，跳转到阅读页
+
+#### 重复导入
+
+重复导入同一 RSS URL 时，仅追加**标题不重复**的新章节到已有作品中，不会创建重复作品。
+
+#### 每日自动同步
+
+应用启动时自动检查所有 RSS 导入的作品，若距离上次同步超过 24 小时，则拉取 RSS 并追加新章节。（可通过 `src/config/index.ts` 中的 `enableRssAutoSync` 开关控制）
+
+> RSS 获取依赖 CORS 代理 (`corsproxy.io`)，若代理不可用可替换 `src/utils/rssParser.ts` 中的 `CORS_PROXY` 常量。
 
 ---
 
