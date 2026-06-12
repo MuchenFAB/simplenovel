@@ -34,6 +34,11 @@ const router = createRouter({
       component: () => import('@/views/SearchView.vue'),
     },
     {
+      path: '/import',
+      name: 'import',
+      component: () => import('@/views/RssImportView.vue'),
+    },
+    {
       path: '/:pathMatch(.*)*',
       name: 'not-found',
       component: () => import('@/views/404File.vue'),

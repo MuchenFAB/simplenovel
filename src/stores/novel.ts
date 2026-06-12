@@ -3,8 +3,11 @@ import { ref, computed, inject } from 'vue'
 import { nextNovelId, nextChapterId } from '@/utils/shortid'
 import { maybeMigrateIds } from '@/utils/migrateIds'
 import { initCountersFromData } from '@/utils/counter'
+import { siteConfig } from '@/config'
+import { fetchAndParseRss } from '@/utils/rssParser'
 import type { NovelApi } from '@/api/novelApi'
 import type { Novel, Chapter } from '@/types'
+import type { RssFeedInfo } from '@/utils/rssParser'
 
 function delay(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms))
@@ -29,6 +32,9 @@ export const useNovelStore = defineStore('novel', () => {
       )
     }
     loading.value = false
+
+    // 启动后尝试执行每日 RSS 自动同步
+    syncAllRssFeeds()
   })()
 
   const novelCount = computed(() => novels.value.length)
@@ -110,6 +116,112 @@ export const useNovelStore = defineStore('novel', () => {
     persist()
   }
 
+  function findNovelByRssUrl(url: string): Novel | undefined {
+    return novels.value.find((n) => n.rssUrl === url)
+  }
+
+  function importRssFeed(feed: RssFeedInfo, rssUrl: string): Novel {
+    const now = Date.now()
+    const novel: Novel = {
+      id: nextNovelId(novels.value.map((n) => n.id)),
+      title: feed.title,
+      author: feed.author,
+      chapters: feed.items.map((item) => ({
+        id: nextChapterId(),
+        title: item.title,
+        content: item.content,
+        createdAt: now,
+        updatedAt: now,
+      })),
+      createdAt: now,
+      updatedAt: now,
+      rssUrl,
+      lastRssSyncAt: now,
+    }
+    novels.value.unshift(novel)
+    persist()
+    return novel
+  }
+
+  function appendRssChapters(novelId: string, newItems: RssFeedInfo['items']): number {
+    const novel = getNovelById(novelId)
+    if (!novel) return 0
+
+    const existingTitles = new Set(novel.chapters.map((c) => c.title))
+    let addedCount = 0
+
+    for (const item of newItems) {
+      if (!existingTitles.has(item.title)) {
+        novel.chapters.push({
+          id: nextChapterId(),
+          title: item.title,
+          content: item.content,
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        })
+        addedCount++
+      }
+    }
+
+    if (addedCount > 0) {
+      novel.updatedAt = Date.now()
+      persist()
+    }
+
+    return addedCount
+  }
+
+  /**
+   * 每日 RSS 自动同步：遍历所有有 rssUrl 的作品，
+   * 检查上次同步时间是否超过 24 小时，如需要则拉取新章节
+   */
+  async function syncAllRssFeeds(): Promise<void> {
+    if (!siteConfig.enableRssAutoSync) return
+
+    const now = Date.now()
+    const ONE_DAY = 24 * 60 * 60 * 1000
+
+    for (const novel of novels.value) {
+      if (!novel.rssUrl) continue
+
+      // 距离上次同步不足 24 小时则跳过
+      if (novel.lastRssSyncAt && now - novel.lastRssSyncAt < ONE_DAY) {
+        continue
+      }
+
+      try {
+        const feed = await fetchAndParseRss(novel.rssUrl)
+
+        const existingTitles = new Set(novel.chapters.map((c) => c.title))
+        let addedCount = 0
+
+        for (const item of feed.items) {
+          if (!existingTitles.has(item.title)) {
+            novel.chapters.push({
+              id: nextChapterId(),
+              title: item.title,
+              content: item.content,
+              createdAt: Date.now(),
+              updatedAt: Date.now(),
+            })
+            addedCount++
+          }
+        }
+
+        if (addedCount > 0) {
+          novel.updatedAt = Date.now()
+        }
+
+        novel.lastRssSyncAt = now
+      } catch {
+        // 同步失败静默跳过，不影响其他 feed
+      }
+    }
+
+    // 所有 feed 同步完成后统一持久化
+    persist()
+  }
+
   function persist(): void {
     api.saveNovels(novels.value)
   }
@@ -127,5 +239,9 @@ export const useNovelStore = defineStore('novel', () => {
     addChapter,
     updateChapter,
     deleteChapter,
+    findNovelByRssUrl,
+    importRssFeed,
+    appendRssChapters,
+    syncAllRssFeeds,
   }
 })

@@ -54,6 +54,10 @@ function goSearch() {
   router.push('/search')
 }
 
+function goImport() {
+  router.push('/import')
+}
+
 function toggleTheme() {
   themeStore.cycle()
 }
@@ -75,6 +79,7 @@ function toggleTheme() {
         <template v-else>
           <button class="vp-nav-link" @click="goHome">书架</button>
           <button class="vp-nav-link" @click="goSearch">搜索</button>
+          <button class="vp-nav-link" @click="goImport">导入</button>
           <button class="vp-nav-link" @click="goEditor">创作</button>
         </template>
         <button

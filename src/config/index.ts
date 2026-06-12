@@ -38,6 +38,9 @@ export interface SiteConfig {
   /** MongoDB database name */
   mongoDbName: string
 
+  /** Enable daily auto-sync for RSS-imported novels */
+  enableRssAutoSync: boolean
+
   /** ICP license number */
   icpNumber: string
 }
@@ -61,6 +64,8 @@ const defaultConfig: SiteConfig = {
   useMongoDB: false,
   mongoBaseUrl: 'http://localhost:3001',
   mongoDbName: 'simplenovel',
+
+  enableRssAutoSync: true,
 
   icpNumber: '',
 }
