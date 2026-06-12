@@ -82,6 +82,14 @@ server {
 
 - **Vercel**: 导入 Git 仓库 -> 框架选 Vite -> 构建命令 `npm run build` -> 输出目录 `dist`
 - **Netlify**: 导入项目 -> Build command `npm run build` -> Publish directory `dist`
+
+#### 方案三: GitHub Pages
+
+仓库已包含 `action/.github/workflows/main.yml`，推送 `action` 分支后自动构建并部署到 GitHub Pages。
+
+1. 在仓库 **Settings → Pages** 中将 Source 设为 **Branch** 根目录选择"/" 配置自定义域名
+2. 推送代码 → 自动构建 → 部署到 `https://exp.example.exp/`
+
 ---
 
 ### 数据存储
