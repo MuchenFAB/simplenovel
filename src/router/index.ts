@@ -28,6 +28,11 @@ const router = createRouter({
       name: 'editorNovel',
       component: () => import('@/views/EditorView.vue'),
     },
+    {
+      path: '/:pathMatch(.*)*',
+      name: 'not-found',
+      component: () => import('@/views/404File.vue'),
+    },
   ],
 })
 

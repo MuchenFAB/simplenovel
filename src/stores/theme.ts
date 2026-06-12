@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, watch } from 'vue'
+import { siteConfig } from '@/config'
 
 export type ThemeMode = 'light' | 'dark' | 'eye-care'
 
@@ -10,7 +11,7 @@ function loadTheme(): ThemeMode {
     const saved = localStorage.getItem(STORAGE_KEY)
     if (saved === 'dark' || saved === 'eye-care') return saved
   } catch {}
-  return 'light'
+  return siteConfig.defaultTheme
 }
 
 function saveTheme(mode: ThemeMode) {
@@ -21,19 +22,26 @@ export const useThemeStore = defineStore('theme', () => {
   const mode = ref<ThemeMode>(loadTheme())
 
   function setMode(m: ThemeMode) {
+    // Check config allows this mode
+    if (m === 'dark' && !siteConfig.enableDarkMode) return
+    if (m === 'eye-care' && !siteConfig.enableEyeCareMode) return
     mode.value = m
     saveTheme(m)
   }
 
   function cycle() {
-    const order: ThemeMode[] = ['light', 'dark', 'eye-care']
-    const idx = order.indexOf(mode.value)
-    const next = (idx + 1) % order.length
-    mode.value = order[next]
+    // Build available mode list from config
+    const allModes: ThemeMode[] = ['light']
+    if (siteConfig.enableDarkMode) allModes.push('dark')
+    if (siteConfig.enableEyeCareMode) allModes.push('eye-care')
+
+    const idx = allModes.indexOf(mode.value)
+    const next = (idx + 1) % allModes.length
+    mode.value = allModes[next]
     saveTheme(mode.value)
   }
 
-  // 同步到 <html> data-theme 属性
+  // Sync to <html> data-theme attribute
   watch(
     mode,
     (val) => {

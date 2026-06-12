@@ -1,0 +1,1 @@
+export { nextNovelId, nextChapterId } from './counter'

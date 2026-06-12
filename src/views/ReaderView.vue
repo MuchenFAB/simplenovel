@@ -25,8 +25,8 @@ function goBack() {
 
     <div class="vp-doc-header">
       <h1>{{ novel.title }}</h1>
-      <p class="vp-doc-author">作者：{{ novel.author }}</p>
-      <p class="vp-doc-meta">共 {{ novel.chapters.length }} 章 · 最后更新：{{ new Date(novel.updatedAt).toLocaleDateString('zh-CN') }}</p>
+      <p class="vp-doc-author">作者: {{ novel.author }}</p>
+      <p class="vp-doc-meta">共 {{ novel.chapters.length }} 章 - 最后更新: {{ new Date(novel.updatedAt).toLocaleDateString('zh-CN') }}</p>
     </div>
 
     <div class="vp-section">

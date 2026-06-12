@@ -2,6 +2,7 @@
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useNovelStore } from '@/stores/novel'
+import { siteConfig } from '@/config'
 import ChapterSidebar from '@/components/ChapterSidebar.vue'
 
 const route = useRoute()
@@ -43,6 +44,7 @@ function goHome() {
 }
 
 function toggleSidebar() {
+  if (!siteConfig.enableChapterSidebar) return
   sidebarOpen.value = !sidebarOpen.value
 }
 
@@ -52,15 +54,18 @@ function onSidebarSelect(chapterId: string) {
 }
 
 // ====================
-// 防爬保护层
+// Anti-crawl protection (controlled by enableAntiCrawl config)
 // ====================
 
 function preventContextMenu(e: Event) {
+  if (siteConfig.allowContextMenu) return true
   e.preventDefault()
   return false
 }
 
 function preventShortcuts(e: KeyboardEvent) {
+  if (siteConfig.allowCopy) return
+
   if (
     e.ctrlKey &&
     (e.key === 'c' || e.key === 'C' ||
@@ -82,6 +87,7 @@ function preventShortcuts(e: KeyboardEvent) {
 }
 
 function preventDragStart(e: DragEvent) {
+  if (!siteConfig.enableAntiCrawl) return
   e.preventDefault()
   return false
 }
@@ -89,16 +95,20 @@ function preventDragStart(e: DragEvent) {
 let observer: MutationObserver | null = null
 
 onMounted(() => {
+  if (!siteConfig.enableAntiCrawl) return
+
   const doc = docRef.value
   if (doc) {
     doc.addEventListener('contextmenu', preventContextMenu)
+    if (!siteConfig.allowCopy) {
+      doc.addEventListener('selectstart', (e) => e.preventDefault())
+    }
     doc.addEventListener('dragstart', preventDragStart)
-    doc.addEventListener('selectstart', (e) => e.preventDefault())
   }
   document.addEventListener('keydown', preventShortcuts)
 
   observer = new MutationObserver(() => {
-    if (docRef.value) {
+    if (docRef.value && !siteConfig.allowCopy) {
       docRef.value.style.userSelect = 'none'
       docRef.value.style.webkitUserSelect = 'none'
     }
@@ -122,8 +132,9 @@ onUnmounted(() => {
 
 <template>
   <div v-if="novel && chapter" class="chapter-wrapper">
-    <!-- 章节侧栏 -->
+    <!-- 章节侧栏（由 enableChapterSidebar 控制） -->
     <ChapterSidebar
+      v-if="siteConfig.enableChapterSidebar"
       :chapters="novel.chapters"
       :novel-id="novelId"
       :current-chapter-id="chapterId"
@@ -135,7 +146,12 @@ onUnmounted(() => {
     <div class="vp-content">
       <!-- 面包屑导航 -->
       <nav class="vp-breadcrumb">
-        <button class="vp-sidebar-toggle" @click="toggleSidebar" title="目录">
+        <button
+          v-if="siteConfig.enableChapterSidebar"
+          class="vp-sidebar-toggle"
+          @click="toggleSidebar"
+          title="目录"
+        >
           📑
         </button>
         <button class="vp-link" @click="goHome">首页</button>
@@ -145,10 +161,14 @@ onUnmounted(() => {
         <span class="current">{{ chapter.title }}</span>
       </nav>
 
-      <!-- 章节正文（受保护） -->
-      <article class="vp-doc" ref="docRef">
+      <!-- 章节正文 -->
+      <article
+        class="vp-doc"
+        ref="docRef"
+        :class="{ 'no-protection': !siteConfig.enableAntiCrawl || siteConfig.allowCopy }"
+      >
         <h1>{{ chapter.title }}</h1>
-        <div class="vp-doc-content protected-text">
+        <div class="vp-doc-content" :class="{ protected: siteConfig.enableAntiCrawl && !siteConfig.allowCopy }">
           <p v-for="(paragraph, i) in chapter.content.split('\n').filter(Boolean)" :key="i">
             {{ paragraph }}
           </p>
@@ -194,20 +214,6 @@ onUnmounted(() => {
   .vp-content {
     margin-left: 280px;
     max-width: 680px;
-  }
-}
-
-/* 侧栏遮罩（移动端） */
-@media (max-width: 1023px) {
-  .chapter-wrapper::after {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.3);
-    z-index: 89;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.25s;
   }
 }
 
@@ -270,19 +276,19 @@ onUnmounted(() => {
   color: var(--vp-c-text-light);
 }
 
-/* 文档正文 */
 .vp-doc h1 {
   font-size: 2rem;
   margin: 0 0 28px;
   text-align: center;
 }
 
-/* ====== 防爬保护 ====== */
 .vp-doc-content {
   font-size: 16px;
   line-height: 2;
   color: var(--vp-c-text);
+}
 
+.vp-doc-content.protected {
   user-select: none;
   -webkit-user-select: none;
   -moz-user-select: none;
@@ -300,7 +306,6 @@ onUnmounted(() => {
   margin: 0 0 12px;
 }
 
-/* 上下章导航 */
 .vp-prev-next {
   display: flex;
   justify-content: space-between;

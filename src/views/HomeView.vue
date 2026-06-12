@@ -15,11 +15,11 @@ function goToEditor() {
   <div class="home">
     <div class="home-hero">
       <h1>📚 书架</h1>
-      <p class="hero-subtitle">您的创作，随时翻阅，随心阅读</p>
+      <p class="hero-subtitle">您的创作, 随时翻阅, 随心阅读</p>
     </div>
 
     <div v-if="store.novels.length === 0" class="vp-empty">
-      <p>📭 书架空空如也，快去创作第一本小说吧</p>
+      <p>📭 书架空空如也, 快去创作第一本小说吧</p>
     </div>
 
     <div v-else class="vp-grid">

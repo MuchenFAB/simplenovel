@@ -2,7 +2,6 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useNovelStore } from '@/stores/novel'
-import footbarRaw from '../../footbar.md?raw'
 
 const route = useRoute()
 const router = useRouter()
@@ -24,23 +23,11 @@ const editingChapterId = ref<string | null>(null)
 
 const chapters = computed(() => existingNovel.value?.chapters ?? [])
 
-// 简单 Markdown 解析 → HTML 行数组
-const footbarLines = computed(() => {
-  return footbarRaw
-    .split('\n')
-    .filter((line) => line.trim())
-    .map((line) => {
-      if (line.startsWith('# ')) {
-        return { type: 'h1', text: line.slice(2) }
-      }
-      if (line.startsWith('- ')) {
-        return { type: 'li', text: line.slice(2) }
-      }
-      if (line.startsWith('> ')) {
-        return { type: 'quote', text: line.slice(2) }
-      }
-      return { type: 'p', text: line }
-    })
+// 检查书名是否重复
+const isTitleDuplicate = computed(() => {
+  const title = novelTitle.value.trim()
+  if (!title) return false
+  return store.checkTitleDuplicate(title, novelId.value)
 })
 
 onMounted(() => {
@@ -57,11 +44,19 @@ function saveNovelMeta() {
   }
 
   if (isEditing.value && novelId.value) {
+    if (store.checkTitleDuplicate(novelTitle.value.trim(), novelId.value)) {
+      alert('与已有作品同名, 请使用不同的名称 (例如 "作品名-续")')
+      return
+    }
     store.updateNovel(novelId.value, {
       title: novelTitle.value.trim(),
       author: novelAuthor.value.trim() || '未知作者',
     })
   } else {
+    if (store.checkTitleDuplicate(novelTitle.value.trim())) {
+      alert('与已有作品同名, 请使用不同的名称 (例如 "作品名-续")')
+      return
+    }
     const novel = store.createNovel(
       novelTitle.value.trim(),
       novelAuthor.value.trim() || '未知作者'
@@ -108,12 +103,19 @@ function saveChapter() {
 }
 
 function deleteChapter(chapterId: string) {
-  if (!confirm('确定要删除该章节吗？')) return
+  if (!confirm('确定要删除该章节吗?')) return
   store.deleteChapter(novelId.value!, chapterId)
 }
 
 function cancelChapterEdit() {
   startAddChapter()
+}
+
+function deleteNovel() {
+  if (!novelId.value) return
+  if (!confirm('确定要删除该作品及其所有章节吗?')) return
+  store.deleteNovel(novelId.value)
+  router.push('/')
 }
 
 function goBack() {
@@ -137,7 +139,11 @@ function goBack() {
           type="text"
           placeholder="请输入作品名称"
           class="vp-input"
+          :class="{ 'vp-input--warn': isTitleDuplicate }"
         />
+        <span v-if="isTitleDuplicate" class="vp-warn-text">
+          ⚠ 与已有作品同名, 请使用不同的名称 (例如 "作品名-续")
+        </span>
       </div>
       <div class="vp-form-group">
         <label>作者</label>
@@ -148,7 +154,10 @@ function goBack() {
           class="vp-input"
         />
       </div>
-      <button class="vp-btn" @click="saveNovelMeta">保存作品信息</button>
+      <div class="vp-section-actions">
+        <button class="vp-btn" @click="saveNovelMeta">保存作品信息</button>
+        <button v-if="isEditing" class="vp-btn vp-btn--danger" @click="deleteNovel">删除作品</button>
+      </div>
     </section>
 
     <!-- 章节管理 -->
@@ -170,7 +179,7 @@ function goBack() {
         </div>
       </div>
       <div v-else class="vp-empty">
-        <p>暂无章节，在下方添加</p>
+        <p>暂无章节, 在下方添加</p>
       </div>
 
       <div class="vp-chapter-editor">
@@ -188,7 +197,7 @@ function goBack() {
           <label>章节内容</label>
           <textarea
             v-model="chapterContent"
-            placeholder="请输入章节内容……"
+            placeholder="请输入章节内容..."
             class="vp-textarea"
             rows="12"
           ></textarea>
@@ -205,20 +214,8 @@ function goBack() {
     </section>
 
     <div v-else-if="!isEditing" class="vp-empty">
-      <p>💡 请先填写作品信息并保存，然后即可添加章节</p>
+      <p>请先填写作品信息并保存, 然后即可添加章节</p>
     </div>
-
-    <!-- ===== 底栏 ===== -->
-    <footer class="vp-footbar">
-      <div class="vp-footbar-inner">
-        <template v-for="(line, i) in footbarLines" :key="i">
-          <strong v-if="line.type === 'h1'" class="footbar-h1">{{ line.text }}</strong>
-          <span v-else-if="line.type === 'li'" class="footbar-li">{{ line.text }}</span>
-          <em v-else-if="line.type === 'quote'" class="footbar-quote">{{ line.text }}</em>
-          <span v-else class="footbar-p">{{ line.text }}</span>
-        </template>
-      </div>
-    </footer>
   </div>
 </template>
 
@@ -226,7 +223,7 @@ function goBack() {
 .vp-content {
   max-width: 720px;
   margin: 0 auto;
-  padding-bottom: 80px;
+  padding-bottom: 64px;
 }
 
 .vp-back-link {
@@ -250,7 +247,7 @@ function goBack() {
   margin: 0 0 28px;
 }
 
-/* Section 卡片 */
+/* Section card */
 .vp-section {
   margin-bottom: 32px;
   padding: 24px;
@@ -266,7 +263,7 @@ function goBack() {
   border-bottom: 1px solid var(--vp-c-border);
 }
 
-/* 表单通用 */
+/* Form */
 .vp-form-group {
   margin-bottom: 16px;
 }
@@ -294,6 +291,23 @@ function goBack() {
   resize: vertical;
 }
 
+.vp-input--warn {
+  border-color: #e67e22;
+  background: #fef9f4;
+}
+
+.vp-input--warn:focus {
+  border-color: #d35400;
+  box-shadow: 0 0 0 3px rgba(230, 126, 34, 0.15);
+}
+
+.vp-warn-text {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  color: #e67e22;
+}
+
 .vp-input:focus,
 .vp-textarea:focus {
   border-color: var(--vp-c-brand);
@@ -304,7 +318,13 @@ function goBack() {
   line-height: 1.8;
 }
 
-/* 按钮 */
+.vp-section-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+/* Button */
 .vp-btn {
   background: var(--vp-c-brand);
   color: #fff;
@@ -336,11 +356,19 @@ function goBack() {
   background: var(--vp-c-border);
 }
 
+.vp-btn--danger {
+  background: #e74c3c;
+}
+
+.vp-btn--danger:hover {
+  background: #c0392b;
+}
+
 .vp-form-actions {
   margin-top: 12px;
 }
 
-/* 章节列表 */
+/* Chapter list */
 .vp-chapter-row {
   display: flex;
   align-items: center;
@@ -395,7 +423,7 @@ function goBack() {
   background: #fef0ef;
 }
 
-/* 章节编辑器 */
+/* Chapter editor */
 .vp-chapter-editor {
   margin-top: 24px;
   padding-top: 20px;
@@ -412,52 +440,5 @@ function goBack() {
   padding: 40px 0;
   color: var(--vp-c-text-lighter);
   font-size: 14px;
-}
-
-/* ===== 底栏 ===== */
-.vp-footbar {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: var(--vp-c-bg);
-  border-top: 1px solid var(--vp-c-border);
-  z-index: 95;
-  padding: 10px 0;
-  transition: var(--vp-transition);
-}
-
-.vp-footbar-inner {
-  max-width: var(--vp-content-max-width);
-  margin: 0 auto;
-  padding: 0 24px;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 6px 16px;
-  font-size: 13px;
-  color: var(--vp-c-text-lighter);
-}
-
-.footbar-h1 {
-  color: var(--vp-c-text);
-  font-size: 13px;
-  width: 100%;
-  margin-bottom: 2px;
-}
-
-.footbar-li {
-  display: inline-block;
-  color: var(--vp-c-text-light);
-}
-
-.footbar-quote {
-  color: var(--vp-c-brand);
-  font-style: italic;
-  font-weight: 500;
-}
-
-.footbar-p {
-  color: var(--vp-c-text-lighter);
 }
 </style>

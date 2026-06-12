@@ -1,29 +1,33 @@
-# SimpleNovel —— 开源简易小说连载平台
+# SimpleNovel
 
-> 轻量、简洁、开箱即用的小说连载阅读与创作系统
+_本项目源码绝大部分使用`DeepSeek-V4-Pro`生成 修改时请注意甄别_
 
-SimpleNovel 是一款基于 **Vue 3.0** 构建的 **开源简易小说连载平台**。聚焦最核心的功能：**阅读文字** 与 **上传文字**，支持分章节管理，无账户系统、无复杂依赖，打开即用。
+> ### 轻量, 简洁, 开箱即用的小说连载阅读与创作系统
 
----
-
-## ✨ 功能
-
-- **阅读文字** — 沉浸式小说在线阅读体验
-- **上传文字** — 自由上传小说内容，支持分章节管理
-- **分章节管理** — 清晰的作品章节目录，阅读与创作互不干扰
+SimpleNovel 是一款基于 **Vue 3.0** 构建的 **开源简易小说连载平台**. 聚焦最核心的功能: **阅读文字** 与 **上传文字**, 支持分章节管理, 无账户系统, 无复杂依赖, 打开即用.
 
 ---
 
-## 🧰 技术栈
+### ✨ 功能
 
-| 层级         | 技术选型                            |
-| ------------ | ----------------------------------- |
-| **前端框架** | Vue 3.0 (Composition API)           |
-| **构建工具** | Vite                                |
+- **阅读文字** - 沉浸式小说在线阅读体验
+- **上传文字** - 自由上传小说内容, 支持分章节管理
+- **分章节管理** - 清晰的作品章节目录, 阅读与创作互不干扰
 
 ---
 
-## 🚀 快速开始
+### 🧰 技术栈
+
+| 层级         | 技术选型            |
+| ------------ | ------------------- |
+| **前端框架** | Vue 3.0             |
+| **构建工具** | Vite                |
+| **后端框架** | Node.JS 24.0.2 LTSC |
+| **后端打包** | npm                 |
+
+---
+
+### 🚀 快速开始
 
 ```bash
 # 克隆仓库
@@ -40,33 +44,72 @@ npm run dev
 npm run build
 ```
 
-> 纯静态前端项目，构建后可部署到任意静态站点托管服务（如 GitHub Pages、Vercel、Netlify 等），或直接放入任意 Web 服务器目录下即可访问。
+---
+
+### 🏭 生产环境部署
+
+SimpleNovel 是**纯静态前端项目**, `npm run build` 后 `dist/` 目录即为完整站点. 部署到任意 Web 服务器即可.
+
+#### 方案一: Nginx (推荐)
+
+将 `dist/` 内容复制到 Nginx 站点目录, 配置 SPA 路由回退:
+
+```nginx
+server {
+    listen       80;
+    server_name  your-domain.com;
+    root         /var/www/simplenovel;
+
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    location /assets/ {
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+    }
+
+    gzip on;
+    gzip_types text/css application/javascript text/plain application/json;
+}
+```
+
+#### 方案二: Vercel / Netlify
+
+- **Vercel**: 导入 Git 仓库 -> 框架选 Vite -> 构建命令 `npm run build` -> 输出目录 `dist`
+- **Netlify**: 导入项目 -> Build command `npm run build` -> Publish directory `dist`
 
 ---
 
-## 📁 项目结构
+### 📁 项目结构
 
 ```
 simplenovel/
 ├── src/
+│   ├── config/         # 配置中心
 │   ├── components/     # 通用组件
 │   ├── views/          # 页面视图
 │   ├── stores/         # 状态管理
-│   └── utils/          # 工具函数
+│   ├── router/         # 路由配置
+│   ├── types/          # 类型定义
+│   ├── utils/          # 工具函数
+│   └── styles/         # 全局样式
 ├── public/             # 静态资源
+├── footbar.md          # 底部备案栏内容
 ├── index.html          # 入口 HTML
 ├── vite.config.ts      # Vite 配置
+├── tsconfig.json       # TypeScript 配置
 └── README.md           # 本文件
 ```
 
 ---
 
-## 📄 开源协议
+### 📄 开源协议
 
-本项目基于 **Apache 2.0 协议** 开源，详情请查看 [LICENSE](./LICENSE) 文件。
+本项目基于 **`Apache 2.0 协议`** 开源, 详情请查看 [LICENSE](./LICENSE) 文件.
 
 ---
 
 <p align="center">
-  <sub>Built with ❤️ for every writer who loves telling stories.</sub>
+  <sub><em>⚡Unlimited Progress⚡</em></sub>
 </p>

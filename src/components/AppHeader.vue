@@ -1,11 +1,20 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { useRouter } from 'vue-router'
-import { useThemeStore, type ThemeMode } from '@/stores/theme'
+import { useRouter, useRoute } from 'vue-router'
+import { useThemeStore } from '@/stores/theme'
+import { siteConfig } from '@/config'
+import type { ThemeMode } from '@/stores/theme'
 
 const router = useRouter()
+const route = useRoute()
 const themeStore = useThemeStore()
 
+const isReading = computed(() => route.path.startsWith('/read/'))
+
+// Site name from config
+const siteName = siteConfig.siteName
+
+// Theme button label mapping
 const themeLabel = computed(() => {
   const map: Record<ThemeMode, string> = {
     light: '🌙',
@@ -15,13 +24,22 @@ const themeLabel = computed(() => {
   return map[themeStore.mode]
 })
 
+// Theme button title (infer next mode from current)
 const themeTitle = computed(() => {
-  const map: Record<ThemeMode, string> = {
-    light: '切换暗色模式',
-    dark: '切换护眼模式',
-    'eye-care': '切换浅色模式',
-  }
-  return map[themeStore.mode]
+  if (themeStore.mode === 'light' && siteConfig.enableDarkMode) return '切换暗色模式'
+  if (themeStore.mode === 'light' && siteConfig.enableEyeCareMode) return '切换护眼模式'
+  if (themeStore.mode === 'dark' && siteConfig.enableEyeCareMode) return '切换护眼模式'
+  if (themeStore.mode === 'dark') return '切换浅色模式'
+  if (themeStore.mode === 'eye-care') return '切换浅色模式'
+  return ''
+})
+
+// Show theme button only when at least two modes available
+const showThemeBtn = computed(() => {
+  let count = 1 // light always enabled
+  if (siteConfig.enableDarkMode) count++
+  if (siteConfig.enableEyeCareMode) count++
+  return count >= 2
 })
 
 function goHome() {
@@ -42,14 +60,20 @@ function toggleTheme() {
     <div class="vp-navbar-inner">
       <div class="vp-nav-left">
         <button class="vp-site-name" @click="goHome">
-          📖 SimpleNovel
+          📖 {{ siteName }}
         </button>
       </div>
 
       <nav class="vp-nav-right">
-        <button class="vp-nav-link" @click="goHome">书架</button>
-        <button class="vp-nav-link" @click="goEditor">创作</button>
+        <template v-if="isReading">
+          <button class="vp-nav-link" @click="goHome">← 书架</button>
+        </template>
+        <template v-else>
+          <button class="vp-nav-link" @click="goHome">书架</button>
+          <button class="vp-nav-link" @click="goEditor">创作</button>
+        </template>
         <button
+          v-if="showThemeBtn"
           class="vp-theme-btn"
           :title="themeTitle"
           @click="toggleTheme"

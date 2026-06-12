@@ -1,14 +1,26 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { v4 as uuidv4 } from '@/utils/uuid'
+import { nextNovelId, nextChapterId } from '@/utils/shortid'
 import { saveNovels, loadNovels } from '@/utils/storage'
+import { maybeMigrateIds } from '@/utils/migrateIds'
+import { initCountersFromData } from '@/utils/counter'
 import type { Novel, Chapter } from '@/types'
 
 export const useNovelStore = defineStore('novel', () => {
-  // --- 状态 ---
   const novels = ref<Novel[]>(loadNovels())
 
-  // --- 计算属性 ---
+  // 首次加载时迁移旧 ID 并初始化计数器
+  if (novels.value.length > 0) {
+    const hadOld = maybeMigrateIds(novels.value)
+    if (hadOld) {
+      saveNovels(novels.value)
+    }
+    initCountersFromData(
+      novels.value.length,
+      novels.value.map((n) => n.chapters.length)
+    )
+  }
+
   const novelCount = computed(() => novels.value.length)
 
   function getNovelById(id: string): Novel | undefined {
@@ -20,10 +32,14 @@ export const useNovelStore = defineStore('novel', () => {
     return novel?.chapters.find((c) => c.id === chapterId)
   }
 
-  // --- 操作 ---
+  function checkTitleDuplicate(title: string, excludeId?: string): boolean {
+    const t = title.trim()
+    return novels.value.some((n) => n.title === t && n.id !== excludeId)
+  }
+
   function createNovel(title: string, author = '未知作者'): Novel {
     const novel: Novel = {
-      id: uuidv4(),
+      id: nextNovelId(),
       title,
       author,
       chapters: [],
@@ -51,7 +67,7 @@ export const useNovelStore = defineStore('novel', () => {
     const novel = getNovelById(novelId)
     if (!novel) return null
     const chapter: Chapter = {
-      id: uuidv4(),
+      id: nextChapterId(),
       title,
       content,
       createdAt: Date.now(),
@@ -84,7 +100,6 @@ export const useNovelStore = defineStore('novel', () => {
     persist()
   }
 
-  // --- 持久化 ---
   function persist(): void {
     saveNovels(novels.value)
   }
@@ -95,6 +110,7 @@ export const useNovelStore = defineStore('novel', () => {
     getNovelById,
     getChapterById,
     createNovel,
+    checkTitleDuplicate,
     updateNovel,
     deleteNovel,
     addChapter,
