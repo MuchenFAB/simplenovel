@@ -136,44 +136,56 @@ export async function exportNovelPdf(novel: Novel): Promise<void> {
     const container = document.createElement('div')
     container.style.cssText = `
       font-family: 'PingFang SC', 'Microsoft YaHei', 'Noto Sans SC', sans-serif;
-      font-size: 14px;
-      line-height: 2;
+      font-size: 16px;
+      line-height: 2.2;
       color: #333;
-      padding: 20px;
+      padding: 40px;
       background: #fff;
     `
 
     // 封面
+    const coverWrapper = document.createElement('div')
+    coverWrapper.style.cssText = 'text-align:center;padding:120px 0 160px;'
+
     const coverTitle = document.createElement('h1')
-    coverTitle.style.cssText = 'font-size:28px;text-align:center;margin:0 0 12px;color:#2c3e50;'
+    coverTitle.style.cssText = 'font-size:36px;margin:0 0 24px;color:#2c3e50;'
     coverTitle.textContent = novel.title
-    container.appendChild(coverTitle)
+    coverWrapper.appendChild(coverTitle)
 
     const coverAuthor = document.createElement('p')
-    coverAuthor.style.cssText = 'font-size:16px;text-align:center;margin:0 0 6px;color:#666;'
-    coverAuthor.textContent = `作者: ${novel.author}`
-    container.appendChild(coverAuthor)
+    coverAuthor.style.cssText = 'font-size:20px;margin:0 0 16px;color:#666;'
+    coverAuthor.textContent = `作者：${novel.author}`
+    coverWrapper.appendChild(coverAuthor)
 
     const coverCount = document.createElement('p')
-    coverCount.style.cssText = 'font-size:14px;text-align:center;margin:0 0 24px;color:#888;'
+    coverCount.style.cssText = 'font-size:16px;margin:0;color:#999;'
     coverCount.textContent = `共 ${novel.chapters.length} 章`
-    container.appendChild(coverCount)
+    coverWrapper.appendChild(coverCount)
+
+    container.appendChild(coverWrapper)
 
     // 逐章内容
-    for (const ch of novel.chapters) {
+    for (let i = 0; i < novel.chapters.length; i++) {
+      const ch = novel.chapters[i]
+
+      // 章节间分隔空白
+      const spacer = document.createElement('div')
+      spacer.style.cssText = 'height:80px;'
+      container.appendChild(spacer)
+
       const chTitle = document.createElement('h2')
-      chTitle.style.cssText = 'font-size:20px;margin:24px 0 12px;color:#2c3e50;page-break-before:always;'
-      chTitle.textContent = ch.title
+      chTitle.style.cssText = 'font-size:24px;text-align:center;margin:0 0 16px;color:#2c3e50;'
+      chTitle.textContent = `第${i + 1}章 ${ch.title}`
       container.appendChild(chTitle)
 
       const divider = document.createElement('hr')
-      divider.style.cssText = 'border:none;border-top:1px solid #ccc;margin:0 0 12px;'
+      divider.style.cssText = 'border:none;border-top:2px solid #e0e0e0;margin:0 0 24px;'
       container.appendChild(divider)
 
       const paragraphs = ch.content.split('\n').filter(Boolean)
       for (const para of paragraphs) {
         const p = document.createElement('p')
-        p.style.cssText = 'margin:0 0 8px;text-indent:2em;'
+        p.style.cssText = 'margin:0 0 12px;text-indent:2em;'
         p.textContent = para
         container.appendChild(p)
       }
