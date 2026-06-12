@@ -81,14 +81,6 @@ server {
 
 - **Vercel**: 导入 Git 仓库 -> 框架选 Vite -> 构建命令 `npm run build` -> 输出目录 `dist`
 - **Netlify**: 导入项目 -> Build command `npm run build` -> Publish directory `dist`
-
-#### 方案三: GitHub Pages
-
-仓库已包含 `.github/workflows/deploy.yml`，推送 `main` 分支后自动构建并部署到 GitHub Pages。
-
-1. 在仓库 **Settings → Pages** 中将 Source 设为 **GitHub Actions**
-2. 推送代码 → 自动构建 → 部署到 `https://<username>.github.io/simplenovel/`
-
 ---
 
 ### 数据存储
