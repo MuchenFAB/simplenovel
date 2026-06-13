@@ -1,0 +1,83 @@
+[
+  {
+    "id": "A",
+    "title": "小众软件",
+    "author": "青小蛙",
+    "chapters": [
+      {
+        "id": "0053",
+        "title": "数码荔枝618年中大促！150+ 款正版软件低至 6 折，PixPin、Typora、Bartender 6……",
+        "content": "一年一度的正版软件618年中大促来了！ 今年的「618 给荔一夏」折扣活动，共有超过 150 款产品参与，到手低至 6 折。 活动时间：即日起至 &#8211; 6 月 19 日 一直在等心仪软件的朋友，快去会场看看吧！点击前往活动会场 &#62;&#62;&#62; 今天先把 6 款热门软件拎出来，给大",
+        "createdAt": 1781327916623,
+        "updatedAt": 1781327916623
+      },
+      {
+        "id": "0054",
+        "title": "Z-Library 开始让用户拥有自己的私有图书馆，不用服务器，还分 20% 收益",
+        "content": "互联网上最大的影子图书馆 Z-Library 上线 Website Mirrors 镜像功能，用户只需要拥有一个独立域名（不需要服务器），就可以绑定到 Z-Library 上，创建自己的图书馆入口，可自定义品牌形象，还可以设置密码保护。不过需要自行承担法律风险，但会分享 20% 的捐赠作为补偿。@A",
+        "createdAt": 1781327916623,
+        "updatedAt": 1781327916623
+      },
+      {
+        "id": "0055",
+        "title": "本周9枚赛博领鸡蛋：《衔尾蛇国王》、《战锤40K：极速狂飙》、《地下城探险公会终极版》等（6.12~6.18）",
+        "content": "本周 Epic 共送出 2 款电脑游戏、1 款手机游戏，分别是《衔尾蛇国王》、《战锤40K：极速狂飙》，以及手机游戏《地下城探险公会终极版》，有效期 6.12~6.18。@Appinn 《衔尾蛇国王 / The Ouroboros King》 这是一款将国际象棋与 Roguelike 玩法结合的策略",
+        "createdAt": 1781327916623,
+        "updatedAt": 1781327916623
+      },
+      {
+        "id": "0056",
+        "title": "MiMo Auto 免费 API 使用指南：从 MiMo Code 中提取免费的 MiMo Auto 模型",
+        "content": "小米发布了基于 OpenCode 的 MiMo Code 终端工具，并且限免了 MiMo-V2.5 模型，但仅限制在 MiMo Code 中使用。不过青小蛙使用 MiMo Code 自身，将其提取出来，可以在其他工具上使用。@Appinn 过程 &#38;&#38; 效果 下面的内容来自 MiMo",
+        "createdAt": 1781327916623,
+        "updatedAt": 1781327916623
+      },
+      {
+        "id": "0057",
+        "title": "小米发布 MiMo Code，基于 OpenCode，限免 MiMo-V2.5",
+        "content": "MiMoCode 是一个终端原生的 AI 编程助手，基于 OpenCode fork 构建，能读写代码、执行命令、管理 Git，通过持久化记忆系统，在多次会话间保持对你项目的深度理解，并自我进化。@Appinn 上面的内容不重要，重要的是 MiMoCode 内置了一个可以直接使用的免费 MiMo A",
+        "createdAt": 1781327916623,
+        "updatedAt": 1781327916623
+      },
+      {
+        "id": "0058",
+        "title": "2026 年美加墨世界杯赛程、比分日历：支持苹果、安卓、Outlook 日历订阅｜6月11日更新",
+        "content": "世界杯日历普通版本日历订阅地址：webcal://f.appinn.com/fifa-world-cup-2026.zh.ics赞助版本日历地址：https://kutt.appinn.com/fifa2026 世界杯今晚就要开幕了，青小蛙也把这个日历发布好了，最近一个版本新增了分组信息。 两个版本",
+        "createdAt": 1781327916623,
+        "updatedAt": 1781327916623
+      },
+      {
+        "id": "0059",
+        "title": "macOS 27 淘汰 AFP，有41 年历史的苹果文件共享协议",
+        "content": "在苹果刚刚发布的 macOS 27 测试版系统中，有用户发现 AFP 客户端已经不再支持，这意味着有着 41年历史的苹果传输协议 AFP 被彻底淘汰。@Appinn AFP（Apple Filing Protocol）是苹果生态最重要、寿命最长的网络协议之一。 AFP 是 Apple File Se",
+        "createdAt": 1781327916623,
+        "updatedAt": 1781327916623
+      },
+      {
+        "id": "0060",
+        "title": "Windows 11 正式上线 Low Latency Profile：明显加速系统响应速度",
+        "content": "Windows 11 的系统响应速度比 Windows 10 慢这件事，是很多人拒绝升级 11 的一大理由。微软的解决方案是 Low Latency Profile：短时间内拉高 CPU 频率，可明显提高系统响应速度，让 Windows 11 更流畅 。 一个月前，微软开始在开发者预览体验频道测试",
+        "createdAt": 1781327916623,
+        "updatedAt": 1781327916623
+      },
+      {
+        "id": "0061",
+        "title": "PowerToys v0.100.0 发布，全新的快捷键指南 / 命令面板扩展库",
+        "content": "PowerToys v0.100.0 在几个小时前发布，看到这个很有标志性的版本号，青小蛙以为是个大日子。@Appinn 实际上，这相当于 0.1 版本，是的。 PowerToys v0.100.0 PowerToys v0.100.0 带来了全新版的快捷方式指南、重大更新的命令面板，以及对 Pow",
+        "createdAt": 1781327916623,
+        "updatedAt": 1781327916623
+      },
+      {
+        "id": "0062",
+        "title": "MIT 开源工具遭遇「抄袭」争议，Mole 作者因“免费替代品”宣传考虑闭源",
+        "content": "「我免费构建了命令行界面（CLI），而付费的图形用户界面（GUI）是我维持项目运营的方式。」@Appinn Mole 是由开发者 @tw93 开发的一套 macOS 系统维护工具，提供垃圾清理、应用管理、磁盘分析、系统监控等功能。 其中，底层命令行工具 Mole CLI 采用 MIT 协议开源，任何",
+        "createdAt": 1781327916623,
+        "updatedAt": 1781327916623
+      }
+    ],
+    "createdAt": 1781327916623,
+    "updatedAt": 1781327916623,
+    "rssUrl": "http://feed.appinn.com/",
+    "lastRssSyncAt": 1781327916623
+  }
+]
