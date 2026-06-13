@@ -25,8 +25,8 @@ SimpleNovel 是一款基于 **Vue 3.0** 构建的 **开源简易小说连载平�
 | ------------ | ------------------- |
 | **前端框架** | Vue 3.0             |
 | **构建工具** | Vite                |
-| **后端框架** | Node.js 24       |
-| **后端打包** | npm                 |
+| **后端框架** | Express 5.x         |
+| **数据存储** | JSON 文件 (服务端)  |
 | **数据库 (可选)** | MongoDB         |
 
 ---
@@ -52,11 +52,18 @@ npm run build
 
 ### 🏭 生产环境部署
 
-SimpleNovel 是**纯静态前端项目**, `npm run build` 后 `dist/` 目录即为完整站点. 部署到任意 Web 服务器即可.
+SimpleNovel 包含 **前端静态文件** 和 **Express 后端服务** 两部分，部署时需要同时运行两者。
 
-#### 方案一: Nginx (推荐)
+#### 方案一: Nginx + PM2 (推荐)
 
-将 `dist/` 内容复制到 Nginx 站点目录, 配置 SPA 路由回退:
+**1. 构建前端**
+```bash
+npm run build        # 输出到 dist/
+```
+
+**2. 部署前端 (Nginx)**
+
+将 `dist/` 复制到 Nginx 站点目录，配置 SPA 回退 + API 代理:
 
 ```nginx
 server {
@@ -66,6 +73,12 @@ server {
 
     location / {
         try_files $uri $uri/ /index.html;
+    }
+
+    location /api/ {
+        proxy_pass http://127.0.0.1:3001;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
     }
 
     location /assets/ {
@@ -78,7 +91,17 @@ server {
 }
 ```
 
+**3. 启动后端 (PM2)**
+```bash
+npm install -g pm2
+pm2 start server/index.js --name simplenovel-server
+pm2 save
+pm2 startup
+```
+
 #### 方案二: Vercel / Netlify
+
+仅部署前端静态文件，数据仍使用浏览器 localStorage。
 
 - **Vercel**: 导入 Git 仓库 -> 框架选 Vite -> 构建命令 `npm run build` -> 输出目录 `dist`
 - **Netlify**: 导入项目 -> Build command `npm run build` -> Publish directory `dist`
@@ -94,26 +117,28 @@ server {
 
 ### 数据存储
 
-SimpleNovel 默认使用 **localStorage** 存储数据, 无需额外配置, 开箱即用.
+SimpleNovel 默认使用 **Express 后端 + JSON 文件** 存储数据（`server/data/novels.json`），所有访问者共享同一份书架内容。
 
-如需将数据迁移到 MongoDB, 可启用内置的 MongoDB 接口:
-
-1. 在 `src/config/index.ts` 中修改配置:
+如需切换回浏览器本地存储（每人独立书架），修改 `src/config/index.ts`:
 
 ```ts
-useMongoDB: true,                      // 启用 MongoDB 存储
-mongoBaseUrl: 'http://localhost:3001', // MongoDB REST API 地址
-mongoDbName: 'simplenovel',           // 数据库名称
+useMongoDB: false,                     // 关闭服务端存储
 ```
 
-2. 后端需提供以下 REST API:
+三种存储模式对比:
+
+| 模式 | useMongoDB | mongoBaseUrl | 数据位置 | 多设备共享 |
+|------|------------|-------------|----------|-----------|
+| **服务端 JSON 文件** (默认) | `true` | `''` | `server/data/novels.json` | ✅ |
+| **MongoDB** | `true` | `http://...` | MongoDB 数据库 | ✅ |
+| **localStorage** | `false` | — | 浏览器本地 | ❌ (每人独立) |
+
+后端需提供以下 REST API (与 `server/index.js` 内置实现一致):
 
 | 方法 | 路径 | 说明 |
 |------|------|------|
 | GET | `/api/{dbName}/novels` | 获取所有小说 |
 | PUT | `/api/{dbName}/novels` | 保存所有小说 |
-
-3. 重新构建部署即可切换
 
 > `src/api/novelApi.ts` 提供了 `createLocalApi()` 和 `createMongoApi()` 两种实现, 通过 `src/main.ts` 中的 config 开关自动选择.
 
@@ -125,7 +150,11 @@ mongoDbName: 'simplenovel',           // 数据库名称
 simplenovel/
 ├── .github/
 │   └── workflows/      # CI/CD 自动部署
+├── server/
+│   ├── index.js        # Express 后端服务 (端口 3001)
+│   └── data/           # JSON 数据文件 (novels.json)
 ├── src/
+│   ├── api/            # 数据访问层 (localStorage / MongoDB)
 │   ├── config/         # 配置中心
 │   ├── components/     # 通用组件
 │   ├── views/          # 页面视图
@@ -139,6 +168,7 @@ simplenovel/
 ├── index.html          # 入口 HTML
 ├── vite.config.ts      # Vite 配置
 ├── tsconfig.json       # TypeScript 配置
+├── package.json        # 依赖与启动脚本
 └── README.md           # 本文件
 ```
 

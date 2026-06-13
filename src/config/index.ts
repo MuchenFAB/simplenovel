@@ -61,8 +61,8 @@ const defaultConfig: SiteConfig = {
   allowCopy: false,
   allowContextMenu: false,
 
-  useMongoDB: false,
-  mongoBaseUrl: 'http://localhost:3001',
+  useMongoDB: true,
+  mongoBaseUrl: '',
   mongoDbName: 'simplenovel',
 
   enableRssAutoSync: true,
