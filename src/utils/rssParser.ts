@@ -77,23 +77,43 @@ function stripHtml(html: string): string {
 }
 
 /**
- * CORS 代理前缀，用于绕过跨域限制获取 RSS feed
- * 使用 corsproxy.io 公共代理服务
+ * CORS 代理列表，按优先级排列
+ * 遇到 403 或其他错误时自动切换备用代理
  */
-const CORS_PROXY = 'https://corsproxy.io/?url='
+const CORS_PROXIES = [
+  'https://api.allorigins.win/raw?url=',
+  'https://corsproxy.io/?url=',
+  'https://rss-proxy.muchen-libs.workers.dev/?url=',
+]
 
 /**
  * 通过 URL 获取并解析 RSS feed
- * 使用 CORS 代理绕过跨域限制
+ * 依次尝试多个 CORS 代理，任意一个成功即返回
  */
 export async function fetchAndParseRss(url: string): Promise<RssFeedInfo> {
-  const proxyUrl = CORS_PROXY + encodeURIComponent(url)
-  const response = await fetch(proxyUrl)
+  const encoded = encodeURIComponent(url)
+  let lastError: Error | null = null
 
-  if (!response.ok) {
-    throw new Error(`获取 RSS 失败: HTTP ${response.status}`)
+  for (const proxy of CORS_PROXIES) {
+    try {
+      const proxyUrl = proxy + encoded
+      const response = await fetch(proxyUrl)
+
+      if (response.ok) {
+        const text = await response.text()
+        return parseRssXml(text)
+      }
+
+      // 记录非 2xx 状态用于调试
+      lastError = new Error(`代理 ${proxy} 返回 HTTP ${response.status}`)
+    } catch (e) {
+      lastError = e instanceof Error ? e : new Error(String(e))
+    }
+    // 当前代理失败，继续尝试下一个
   }
 
-  const text = await response.text()
-  return parseRssXml(text)
+  throw new Error(
+    `所有 CORS 代理均请求失败。最后错误: ${lastError?.message || '未知错误'}。` +
+    `可尝试在 src/utils/rssParser.ts 中添加新的代理地址。`
+  )
 }
